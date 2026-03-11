@@ -23,8 +23,10 @@ public class User extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
+    private String password;  // Google 로그인 유저는 null
+
+    @Column(unique = true)
+    private String googleId;
 
     @Column(unique = true, nullable = false)
     private String nickname;
