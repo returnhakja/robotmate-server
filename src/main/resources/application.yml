@@ -38,8 +38,8 @@ cloudflare:
     bucket: ${R2_BUCKET:robotmate-images}
     public-url: ${R2_PUBLIC_URL:}
 
+google:
+  client-id: ${GOOGLE_CLIENT_ID:}
+
 cors:
-  allowed-origins:
-    - http://localhost:3000
-    - https://robotmate.kr
-    - https://www.robotmate.kr
+  allowed-origins: http://localhost:3000,https://robotmate.kr,https://www.robotmate.kr

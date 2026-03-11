@@ -29,6 +29,9 @@ target/
 hs_err_pid*
 replay_pid*
 
+# IDE
+.idea/
+
 # Environment
 .env
 .env.local
