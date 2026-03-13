@@ -19,6 +19,4 @@ public interface LikeRepository extends JpaRepository<Like, String> {
     @Query("SELECT l.post.id, COUNT(l) FROM Like l WHERE l.post.id IN :postIds GROUP BY l.post.id")
     List<Object[]> countsByPostIds(@Param("postIds") List<String> postIds);
 
-    @Query("SELECT c.post.id, COUNT(c) FROM Comment c WHERE c.post.id IN :postIds GROUP BY c.post.id")
-    List<Object[]> commentCountsByPostIds(@Param("postIds") List<String> postIds);
 }

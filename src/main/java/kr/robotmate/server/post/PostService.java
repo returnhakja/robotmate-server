@@ -1,5 +1,6 @@
 package kr.robotmate.server.post;
 
+import kr.robotmate.server.comment.CommentRepository;
 import kr.robotmate.server.common.exception.ForbiddenException;
 import kr.robotmate.server.common.exception.NotFoundException;
 import kr.robotmate.server.post.dto.*;
@@ -31,6 +32,7 @@ public class PostService {
     private final RobotModelRepository robotModelRepository;
     private final LikeRepository likeRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final CommentRepository commentRepository;
 
     public Page<PostSummaryResponse> getPosts(PostType type, String model, String tag,
                                                String sort, int page, int size) {
@@ -63,7 +65,7 @@ public class PostService {
         Post post = findPost(postId);
 
         long likeCount = likeRepository.countByPostId(postId);
-        long commentCount = likeRepository.countByPostId(postId);
+        long commentCount = commentRepository.countByPostId(postId);
         boolean liked = currentUserId != null && likeRepository.existsByUserIdAndPostId(currentUserId, postId);
         boolean bookmarked = currentUserId != null && bookmarkRepository.existsByUserIdAndPostId(currentUserId, postId);
 
@@ -125,7 +127,7 @@ public class PostService {
         }
 
         long likeCount = likeRepository.countByPostId(postId);
-        long commentCount = likeRepository.countByPostId(postId);
+        long commentCount = commentRepository.countByPostId(postId);
         return PostDetailResponse.from(post, likeCount, commentCount, false, false);
     }
 
@@ -194,7 +196,7 @@ public class PostService {
     }
 
     private Map<String, Long> getCommentCounts(List<String> postIds) {
-        return likeRepository.commentCountsByPostIds(postIds).stream()
+        return commentRepository.countsByPostIds(postIds).stream()
                 .collect(Collectors.toMap(row -> (String) row[0], row -> (Long) row[1]));
     }
 }
