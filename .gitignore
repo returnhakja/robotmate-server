@@ -36,4 +36,3 @@ replay_pid*
 .env
 .env.local
 application-local.yml
-application-prod.yml
