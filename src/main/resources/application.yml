@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: local
+    active: ${SPRING_PROFILES_ACTIVE:local}
 
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:robotmate}
@@ -42,4 +42,4 @@ google:
   client-id: ${GOOGLE_CLIENT_ID:}
 
 cors:
-  allowed-origins: http://localhost:3000,https://robotmate.kr,https://www.robotmate.kr
+  allowed-origins: http://localhost:3000,https://robotmate.com,https://www.robotmate.com
