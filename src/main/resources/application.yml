@@ -42,4 +42,4 @@ google:
   client-id: ${GOOGLE_CLIENT_ID:}
 
 cors:
-  allowed-origins: http://localhost:3000,https://robotmate.com,https://www.robotmate.com
+  allowed-origins: http://localhost:3000,https://robotmate.com,https://www.robotmate.com,https://robotmate.kr,https://www.robotmate.kr
