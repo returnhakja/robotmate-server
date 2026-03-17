@@ -1,0 +1,7 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "java -Xms128m -Xmx300m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -Dspring.profiles.active=prod -jar target/*.jar"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 60
