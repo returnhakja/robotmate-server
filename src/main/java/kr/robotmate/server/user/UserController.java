@@ -1,6 +1,7 @@
 package kr.robotmate.server.user;
 
 import kr.robotmate.server.auth.dto.UserResponse;
+import kr.robotmate.server.comment.dto.MyCommentResponse;
 import kr.robotmate.server.common.ApiResponse;
 import kr.robotmate.server.common.PageResponse;
 import kr.robotmate.server.common.SecurityUtil;
@@ -54,5 +55,15 @@ public class UserController {
         String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(
                 PageResponse.from(userService.getMyBookmarks(userId, page, size))));
+    }
+
+    @Operation(summary = "내 댓글 목록", description = "내가 작성한 댓글/대댓글 목록을 최신순으로 반환합니다. isReply=true이면 대댓글입니다.")
+    @GetMapping("/comments")
+    public ResponseEntity<ApiResponse<PageResponse<MyCommentResponse>>> getMyComments(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size) {
+        String userId = SecurityUtil.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(
+                PageResponse.from(userService.getMyComments(userId, page, size))));
     }
 }

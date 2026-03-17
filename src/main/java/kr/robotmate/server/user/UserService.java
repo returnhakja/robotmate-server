@@ -2,6 +2,7 @@ package kr.robotmate.server.user;
 
 import kr.robotmate.server.auth.dto.UserResponse;
 import kr.robotmate.server.comment.CommentRepository;
+import kr.robotmate.server.comment.dto.MyCommentResponse;
 import kr.robotmate.server.common.exception.ConflictException;
 import kr.robotmate.server.common.exception.NotFoundException;
 import kr.robotmate.server.post.Bookmark;
@@ -72,6 +73,12 @@ public class UserService {
                 likeCounts.getOrDefault(b.getPost().getId(), 0L),
                 commentCounts.getOrDefault(b.getPost().getId(), 0L)
         ));
+    }
+
+    public Page<MyCommentResponse> getMyComments(String userId, int page, int size) {
+        return commentRepository.findByAuthorIdOrderByCreatedAtDesc(
+                userId, PageRequest.of(page, size))
+                .map(MyCommentResponse::from);
     }
 
     private Page<PostSummaryResponse> toSummaryPage(Page<Post> posts) {
