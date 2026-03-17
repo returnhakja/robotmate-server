@@ -1,5 +1,6 @@
 package kr.robotmate.server.common;
 
+import kr.robotmate.server.common.exception.ConflictException;
 import kr.robotmate.server.common.exception.ForbiddenException;
 import kr.robotmate.server.common.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ApiResponse<Void> handleForbidden(ForbiddenException e) {
+        return ApiResponse.fail(e.getMessage());
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiResponse<Void> handleConflict(ConflictException e) {
         return ApiResponse.fail(e.getMessage());
     }
 

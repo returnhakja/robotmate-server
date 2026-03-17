@@ -2,6 +2,7 @@ package kr.robotmate.server.user;
 
 import kr.robotmate.server.auth.dto.UserResponse;
 import kr.robotmate.server.comment.CommentRepository;
+import kr.robotmate.server.common.exception.ConflictException;
 import kr.robotmate.server.common.exception.NotFoundException;
 import kr.robotmate.server.post.Bookmark;
 import kr.robotmate.server.post.BookmarkRepository;
@@ -39,7 +40,11 @@ public class UserService {
     @Transactional
     public UserResponse updateMe(String userId, UpdateUserRequest request) {
         User user = findUser(userId);
-        if (request.getNickname() != null) user.setNickname(request.getNickname());
+        if (request.getNickname() != null) {
+            if (userRepository.existsByNicknameAndIdNot(request.getNickname(), userId))
+                throw new ConflictException("이미 사용 중인 닉네임입니다.");
+            user.setNickname(request.getNickname());
+        }
         if (request.getProfileImage() != null) user.setProfileImage(request.getProfileImage());
         return UserResponse.from(user);
     }
