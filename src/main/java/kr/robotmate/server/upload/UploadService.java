@@ -43,7 +43,7 @@ public class UploadService {
                 RequestBody.fromBytes(file.getBytes())
         );
 
-        return publicUrl + "/" + key;
+        return publicUrl + "/" + bucket + "/" + key;
     }
 
     private String getExtension(String filename) {
