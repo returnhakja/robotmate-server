@@ -7,7 +7,9 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtProvider {
@@ -17,6 +19,9 @@ public class JwtProvider {
 
     @Value("${jwt.expiration}")
     private long expiration;
+
+    @Value("${jwt.refresh-expiration}")
+    private long refreshExpiration;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
@@ -47,5 +52,13 @@ public class JwtProvider {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public String generateRefreshTokenValue() {
+        return UUID.randomUUID().toString();
+    }
+
+    public LocalDateTime getRefreshTokenExpiresAt() {
+        return LocalDateTime.now().plusSeconds(refreshExpiration / 1000);
     }
 }

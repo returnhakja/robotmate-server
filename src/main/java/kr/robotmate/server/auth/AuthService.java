@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -21,8 +22,10 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final RestTemplate restTemplate;
 
+    @Transactional
     public AuthResponse googleLogin(String idToken) {
         log.info("[Auth] Google 로그인 요청 수신");
         GoogleTokenInfo tokenInfo = verifyGoogleToken(idToken);
@@ -42,13 +45,63 @@ public class AuthService {
 
         log.info("[Auth] 유저 확인 완료 - userId={}, nickname={}", user.getId(), user.getNickname());
 
-        String jwt = jwtProvider.generateToken(user.getId());
-        log.info("[Auth] JWT 발급 완료 - userId={}", user.getId());
+        String accessToken = jwtProvider.generateToken(user.getId());
+        String refreshTokenValue = issueRefreshToken(user.getId());
+        log.info("[Auth] 토큰 발급 완료 - userId={}", user.getId());
 
         return AuthResponse.builder()
-                .accessToken(jwt)
+                .accessToken(accessToken)
+                .refreshToken(refreshTokenValue)
                 .user(UserResponse.from(user))
                 .build();
+    }
+
+    @Transactional
+    public AuthResponse refresh(String refreshTokenValue) {
+        RefreshToken refreshToken = refreshTokenRepository.findByToken(refreshTokenValue)
+                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+
+        if (refreshToken.isExpired()) {
+            refreshTokenRepository.delete(refreshToken);
+            throw new RuntimeException("Refresh token expired");
+        }
+
+        String userId = refreshToken.getUserId();
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // 기존 refresh token 교체 (Refresh Token Rotation)
+        refreshTokenRepository.delete(refreshToken);
+        String newRefreshTokenValue = issueRefreshToken(userId);
+        String newAccessToken = jwtProvider.generateToken(userId);
+
+        log.info("[Auth] 토큰 갱신 완료 - userId={}", userId);
+
+        return AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshTokenValue)
+                .user(UserResponse.from(user))
+                .build();
+    }
+
+    @Transactional
+    public void logout(String refreshTokenValue) {
+        refreshTokenRepository.findByToken(refreshTokenValue)
+                .ifPresent(token -> {
+                    log.info("[Auth] 로그아웃 - userId={}", token.getUserId());
+                    refreshTokenRepository.delete(token);
+                });
+    }
+
+    private String issueRefreshToken(String userId) {
+        String tokenValue = jwtProvider.generateRefreshTokenValue();
+        RefreshToken refreshToken = RefreshToken.builder()
+                .userId(userId)
+                .token(tokenValue)
+                .expiresAt(jwtProvider.getRefreshTokenExpiresAt())
+                .build();
+        refreshTokenRepository.save(refreshToken);
+        return tokenValue;
     }
 
     private GoogleTokenInfo verifyGoogleToken(String idToken) {
