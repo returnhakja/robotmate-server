@@ -42,8 +42,9 @@ public class CommentService {
                     return java.util.stream.Stream.concat(self, replies);
                 }).toList();
 
-        Map<String, Long> likeCounts = commentLikeRepository.countsByCommentIds(allIds).stream()
-                .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
+        Map<String, Long> likeCounts = allIds.isEmpty() ? Map.of()
+                : commentLikeRepository.countsByCommentIds(allIds).stream()
+                        .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
 
         Set<String> likedIds = (currentUserId != null && !allIds.isEmpty())
                 ? Set.copyOf(commentLikeRepository.findLikedCommentIds(currentUserId, allIds))

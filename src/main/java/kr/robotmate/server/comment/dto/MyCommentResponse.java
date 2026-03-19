@@ -15,8 +15,9 @@ public class MyCommentResponse {
     private String postId;
     private String postTitle;
     private boolean isReply;
+    private long likeCount;
 
-    public static MyCommentResponse from(Comment comment) {
+    public static MyCommentResponse from(Comment comment, long likeCount) {
         return MyCommentResponse.builder()
                 .id(comment.getId())
                 .content(comment.getContent())
@@ -24,6 +25,7 @@ public class MyCommentResponse {
                 .postId(comment.getPost().getId())
                 .postTitle(comment.getPost().getTitle())
                 .isReply(comment.getParent() != null)
+                .likeCount(likeCount)
                 .build();
     }
 }

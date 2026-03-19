@@ -1,6 +1,8 @@
 package kr.robotmate.server.user;
 
 import kr.robotmate.server.auth.dto.UserResponse;
+import kr.robotmate.server.comment.Comment;
+import kr.robotmate.server.comment.CommentLikeRepository;
 import kr.robotmate.server.comment.CommentRepository;
 import kr.robotmate.server.comment.dto.MyCommentResponse;
 import kr.robotmate.server.common.exception.ConflictException;
@@ -32,6 +34,7 @@ public class UserService {
     private final BookmarkRepository bookmarkRepository;
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     public UserResponse getMe(String userId) {
         User user = findUser(userId);
@@ -76,9 +79,13 @@ public class UserService {
     }
 
     public Page<MyCommentResponse> getMyComments(String userId, int page, int size) {
-        return commentRepository.findByAuthorIdOrderByCreatedAtDesc(
-                userId, PageRequest.of(page, size))
-                .map(MyCommentResponse::from);
+        Page<Comment> comments = commentRepository.findByAuthorIdOrderByCreatedAtDesc(
+                userId, PageRequest.of(page, size));
+        List<String> commentIds = comments.map(Comment::getId).toList();
+        Map<String, Long> likeCounts = commentIds.isEmpty() ? Map.of()
+                : commentLikeRepository.countsByCommentIds(commentIds).stream()
+                        .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
+        return comments.map(c -> MyCommentResponse.from(c, likeCounts.getOrDefault(c.getId(), 0L)));
     }
 
     private Page<PostSummaryResponse> toSummaryPage(Page<Post> posts) {
