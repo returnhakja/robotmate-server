@@ -26,4 +26,21 @@ public class PostSpecification {
             return cb.equal(tags, tag);
         };
     }
+
+    public static Specification<Post> hasKeyword(String keyword) {
+        return (root, query, cb) -> {
+            if (keyword == null) return null;
+            return cb.like(cb.lower(root.get("title")), "%" + keyword.toLowerCase() + "%");
+        };
+    }
+
+    public static Specification<Post> hasAuthorId(String authorId) {
+        return (root, query, cb) ->
+                authorId == null ? null : cb.equal(root.get("author").get("id"), authorId);
+    }
+
+    public static Specification<Post> hasVisibility(PostVisibility visibility) {
+        return (root, query, cb) ->
+                visibility == null ? null : cb.equal(root.get("visibility"), visibility);
+    }
 }
