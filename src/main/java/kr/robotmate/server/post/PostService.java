@@ -45,7 +45,7 @@ public class PostService {
                 ? Sort.by(Sort.Direction.DESC, "viewCount")
                 : Sort.by(Sort.Direction.DESC, "createdAt");
 
-        Pageable pageable = PageRequest.of(page, size, sorting);
+        Pageable pageable = PageRequest.of(page - 1, size, sorting);
         Page<Post> posts = postRepository.findAll(spec, pageable);
 
         List<String> postIds = posts.map(Post::getId).toList();

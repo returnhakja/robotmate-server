@@ -32,7 +32,7 @@ public class PostController {
             @RequestParam(required = false) String model,
             @RequestParam(required = false) String tag,
             @RequestParam(defaultValue = "latest") String sort,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size) {
 
         PostType postType = (type == null || type.equalsIgnoreCase("all")) ? null : PostType.valueOf(type.toUpperCase());

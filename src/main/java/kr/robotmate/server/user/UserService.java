@@ -55,13 +55,13 @@ public class UserService {
 
     public Page<PostSummaryResponse> getMyPosts(String userId, int page, int size) {
         Page<Post> posts = postRepository.findByAuthorIdOrderByCreatedAtDesc(
-                userId, PageRequest.of(page, size));
+                userId, PageRequest.of(page - 1, size));
         return toSummaryPage(posts);
     }
 
     public Page<PostSummaryResponse> getMyBookmarks(String userId, int page, int size) {
         Page<Bookmark> bookmarks = bookmarkRepository.findByUserIdWithPost(
-                userId, PageRequest.of(page, size));
+                userId, PageRequest.of(page - 1, size));
 
         List<Post> posts = bookmarks.map(Bookmark::getPost).toList();
         List<String> postIds = posts.stream().map(Post::getId).toList();
@@ -80,7 +80,7 @@ public class UserService {
 
     public Page<MyCommentResponse> getMyComments(String userId, int page, int size) {
         Page<Comment> comments = commentRepository.findByAuthorIdOrderByCreatedAtDesc(
-                userId, PageRequest.of(page, size));
+                userId, PageRequest.of(page - 1, size));
         List<String> commentIds = comments.map(Comment::getId).toList();
         Map<String, Long> likeCounts = commentIds.isEmpty() ? Map.of()
                 : commentLikeRepository.countsByCommentIds(commentIds).stream()

@@ -40,7 +40,7 @@ public class UserController {
     @Operation(summary = "내 게시글 목록", description = "내가 작성한 게시글 목록을 최신순으로 반환합니다.")
     @GetMapping("/posts")
     public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> getMyPosts(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size) {
         String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(
@@ -50,7 +50,7 @@ public class UserController {
     @Operation(summary = "내 북마크 목록", description = "내가 북마크한 게시글 목록을 반환합니다.")
     @GetMapping("/bookmarks")
     public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> getMyBookmarks(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size) {
         String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(
@@ -60,7 +60,7 @@ public class UserController {
     @Operation(summary = "내 댓글 목록", description = "내가 작성한 댓글/대댓글 목록을 최신순으로 반환합니다. isReply=true이면 대댓글입니다.")
     @GetMapping("/comments")
     public ResponseEntity<ApiResponse<PageResponse<MyCommentResponse>>> getMyComments(
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size) {
         String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(
