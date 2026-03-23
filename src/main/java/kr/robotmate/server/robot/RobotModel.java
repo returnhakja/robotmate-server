@@ -28,6 +28,7 @@ public class RobotModel extends BaseEntity {
 
     private String maker;
     private String price;
+    private String emoji;
 
     @Column(columnDefinition = "TEXT")
     private String description;

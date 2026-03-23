@@ -25,6 +25,10 @@ public class Post extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PostType type;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private PostVisibility visibility = PostVisibility.PUBLIC;
+
     @Column(nullable = false)
     private String title;
 

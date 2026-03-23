@@ -37,6 +37,12 @@ public class User extends BaseEntity {
     @Builder.Default
     private Role role = Role.USER;
 
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private UserStatus status = UserStatus.ACTIVE;
+
+    private String suspendReason;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @Builder.Default
     private List<UserRobot> ownedRobots = new ArrayList<>();

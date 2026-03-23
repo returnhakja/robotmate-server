@@ -14,6 +14,7 @@ public class RobotModelResponse {
     private String name;
     private String maker;
     private String price;
+    private String emoji;
     private String description;
     private String imageUrl;
     private String officialSite;
@@ -26,6 +27,7 @@ public class RobotModelResponse {
                 .name(model.getName())
                 .maker(model.getMaker())
                 .price(model.getPrice())
+                .emoji(model.getEmoji())
                 .description(model.getDescription())
                 .imageUrl(model.getImageUrl())
                 .officialSite(model.getOfficialSite())
