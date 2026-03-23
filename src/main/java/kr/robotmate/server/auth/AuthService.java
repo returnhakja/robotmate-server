@@ -3,8 +3,10 @@ package kr.robotmate.server.auth;
 import kr.robotmate.server.auth.dto.AuthResponse;
 import kr.robotmate.server.auth.dto.GoogleTokenInfo;
 import kr.robotmate.server.auth.dto.UserResponse;
+import kr.robotmate.server.common.exception.SuspendedException;
 import kr.robotmate.server.user.User;
 import kr.robotmate.server.user.UserRepository;
+import kr.robotmate.server.user.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,7 +47,11 @@ public class AuthService {
 
         log.info("[Auth] 유저 확인 완료 - userId={}, nickname={}", user.getId(), user.getNickname());
 
-        String accessToken = jwtProvider.generateToken(user.getId());
+        if (user.getStatus() == UserStatus.SUSPENDED) {
+            throw new SuspendedException(user.getSuspendReason());
+        }
+
+        String accessToken = jwtProvider.generateToken(user.getId(), user.getRole().name());
         String refreshTokenValue = issueRefreshToken(user.getId());
         log.info("[Auth] 토큰 발급 완료 - userId={}", user.getId());
 
@@ -70,10 +76,14 @@ public class AuthService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+        if (user.getStatus() == UserStatus.SUSPENDED) {
+            throw new SuspendedException(user.getSuspendReason());
+        }
+
         // 기존 refresh token 교체 (Refresh Token Rotation)
         refreshTokenRepository.delete(refreshToken);
         String newRefreshTokenValue = issueRefreshToken(userId);
-        String newAccessToken = jwtProvider.generateToken(userId);
+        String newAccessToken = jwtProvider.generateToken(userId, user.getRole().name());
 
         log.info("[Auth] 토큰 갱신 완료 - userId={}", userId);
 

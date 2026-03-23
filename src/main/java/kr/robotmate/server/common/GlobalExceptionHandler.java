@@ -3,6 +3,7 @@ package kr.robotmate.server.common;
 import kr.robotmate.server.common.exception.ConflictException;
 import kr.robotmate.server.common.exception.ForbiddenException;
 import kr.robotmate.server.common.exception.NotFoundException;
+import kr.robotmate.server.common.exception.SuspendedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -22,6 +23,12 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ApiResponse<Void> handleNotFound(NotFoundException e) {
         return ApiResponse.fail(e.getMessage());
+    }
+
+    @ExceptionHandler(SuspendedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ApiResponse<?> handleSuspended(SuspendedException e) {
+        return ApiResponse.suspended(e.getSuspendReason());
     }
 
     @ExceptionHandler(ForbiddenException.class)
