@@ -1,5 +1,6 @@
 package kr.robotmate.server.user;
 
+import kr.robotmate.server.auth.RefreshTokenRepository;
 import kr.robotmate.server.auth.dto.UserResponse;
 import kr.robotmate.server.comment.Comment;
 import kr.robotmate.server.comment.CommentLikeRepository;
@@ -35,6 +36,7 @@ public class UserService {
     private final LikeRepository likeRepository;
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public UserResponse getMe(String userId) {
         User user = findUser(userId);
@@ -51,6 +53,13 @@ public class UserService {
         }
         if (request.getProfileImage() != null) user.setProfileImage(request.getProfileImage());
         return UserResponse.from(user);
+    }
+
+    @Transactional
+    public void withdrawMe(String userId) {
+        User user = findUser(userId);
+        user.setStatus(UserStatus.WITHDRAWAL_REQUESTED);
+        refreshTokenRepository.deleteByUserId(userId);
     }
 
     public Page<PostSummaryResponse> getMyPosts(String userId, int page, int size) {

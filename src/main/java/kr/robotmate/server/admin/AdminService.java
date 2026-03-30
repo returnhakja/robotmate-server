@@ -96,12 +96,7 @@ public class AdminService {
     @Transactional
     public void deleteUser(String userId) {
         User user = findUser(userId);
-        user.setEmail("deleted_" + userId + "@robotmate.com");
-        user.setNickname("탈퇴한사용자_" + userId.substring(0, 8));
-        user.setGoogleId(null);
-        user.setProfileImage(null);
-        user.setPassword(null);
-        user.setStatus(UserStatus.DELETED);
+        user.setStatus(UserStatus.PENDING_DELETION);
         user.setSuspendReason(null);
         refreshTokenRepository.deleteByUserId(userId);
     }

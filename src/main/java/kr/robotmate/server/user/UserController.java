@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +28,14 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserResponse>> getMe() {
         String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(userService.getMe(userId)));
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "계정을 탈퇴 처리합니다. 개인정보는 보존되며 상태가 PENDING_DELETION으로 변경됩니다. 발급된 리프레시 토큰은 즉시 무효화됩니다.")
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void withdrawMe() {
+        String userId = SecurityUtil.getCurrentUserId();
+        userService.withdrawMe(userId);
     }
 
     @Operation(summary = "내 정보 수정", description = "닉네임 또는 프로필 이미지를 변경합니다. 보내지 않은 필드는 변경되지 않습니다. 닉네임은 2~20자.")

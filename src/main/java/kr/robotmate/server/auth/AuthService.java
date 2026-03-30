@@ -50,6 +50,9 @@ public class AuthService {
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new SuspendedException(user.getSuspendReason());
         }
+        if (user.getStatus() == UserStatus.WITHDRAWAL_REQUESTED || user.getStatus() == UserStatus.PENDING_DELETION) {
+            throw new SuspendedException("탈퇴 처리 중인 계정입니다.");
+        }
 
         String accessToken = jwtProvider.generateToken(user.getId(), user.getRole().name());
         String refreshTokenValue = issueRefreshToken(user.getId());
@@ -78,6 +81,9 @@ public class AuthService {
 
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new SuspendedException(user.getSuspendReason());
+        }
+        if (user.getStatus() == UserStatus.WITHDRAWAL_REQUESTED || user.getStatus() == UserStatus.PENDING_DELETION) {
+            throw new SuspendedException("탈퇴 처리 중인 계정입니다.");
         }
 
         // 기존 refresh token 교체 (Refresh Token Rotation)

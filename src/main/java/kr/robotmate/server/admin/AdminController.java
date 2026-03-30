@@ -97,9 +97,8 @@ public class AdminController {
     }
 
     @Operation(
-            summary = "회원 강제 탈퇴 (익명화)",
-            description = "회원을 강제 탈퇴 처리합니다. 계정 삭제가 아닌 익명화로, " +
-                    "이메일/닉네임/프로필이미지/googleId를 무작위 값으로 대체하고 status를 DELETED로 변경합니다. " +
+            summary = "회원 강제 탈퇴",
+            description = "회원을 강제 탈퇴 처리합니다. 개인정보는 보존되며 status가 PENDING_DELETION으로 변경됩니다. " +
                     "작성한 게시글과 댓글은 유지됩니다. 발급된 리프레시 토큰은 즉시 무효화됩니다."
     )
     @ApiResponses({
