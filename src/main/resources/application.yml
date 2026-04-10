@@ -24,6 +24,7 @@ spring:
 
 server:
   port: 8080
+  address: 0.0.0.0
 
 jwt:
   secret: ${JWT_SECRET:please-change-this-secret-key-in-production-min-32-chars}

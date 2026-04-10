@@ -1,6 +1,7 @@
 package kr.robotmate.server.post.dto;
 
 import jakarta.validation.constraints.Size;
+import kr.robotmate.server.post.PostVisibility;
 import kr.robotmate.server.post.SaleType;
 import lombok.Data;
 
@@ -11,6 +12,8 @@ public class UpdatePostRequest {
     private String title;
     private String content;
     private String robotModelId;
+    private String userRobotId;
+    private PostVisibility visibility;
     private List<String> tags;
 
     @Size(max = 5, message = "이미지는 최대 5장까지 업로드 가능합니다.")
@@ -22,6 +25,7 @@ public class UpdatePostRequest {
     private String condition;
     private String usagePeriod;
     private String tradeMethod;
+    private String tradeLocation;
     private String contactInfo;
     private Boolean sold;
 }

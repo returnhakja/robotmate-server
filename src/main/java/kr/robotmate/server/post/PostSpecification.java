@@ -43,4 +43,35 @@ public class PostSpecification {
         return (root, query, cb) ->
                 visibility == null ? null : cb.equal(root.get("visibility"), visibility);
     }
+
+    /**
+     * 팔로잉 중인 유저의 게시글만 필터링
+     */
+    public static Specification<Post> fromFollowing(java.util.List<String> followingIds) {
+        return (root, query, cb) -> {
+            if (followingIds == null || followingIds.isEmpty()) {
+                return cb.disjunction(); // 팔로잉이 없으면 결과 없음
+            }
+            return root.get("author").get("id").in(followingIds);
+        };
+    }
+
+    /**
+     * 비로그인/타인: PUBLIC만 노출
+     * 로그인한 본인: 본인의 PRIVATE + 모든 PUBLIC
+     */
+    public static Specification<Post> visibleTo(String currentUserId) {
+        return (root, query, cb) -> {
+            if (currentUserId == null) {
+                return cb.equal(root.get("visibility"), PostVisibility.PUBLIC);
+            }
+            return cb.or(
+                    cb.equal(root.get("visibility"), PostVisibility.PUBLIC),
+                    cb.and(
+                            cb.equal(root.get("visibility"), PostVisibility.PRIVATE),
+                            cb.equal(root.get("author").get("id"), currentUserId)
+                    )
+            );
+        };
+    }
 }

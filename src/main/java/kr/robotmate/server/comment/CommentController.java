@@ -49,6 +49,15 @@ public class CommentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
     }
 
+    @Operation(summary = "댓글 수정", description = "본인이 작성한 댓글을 수정합니다. 로그인 필요.")
+    @PutMapping("/api/comments/{commentId}")
+    public ResponseEntity<ApiResponse<CommentResponse>> updateComment(
+            @PathVariable String commentId,
+            @Valid @RequestBody CreateCommentRequest request) {
+        String userId = SecurityUtil.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(commentService.updateComment(commentId, request, userId)));
+    }
+
     @Operation(summary = "댓글 삭제", description = "본인이 작성한 댓글을 삭제합니다. 로그인 필요.")
     @DeleteMapping("/api/comments/{commentId}")
     public ResponseEntity<ApiResponse<Void>> deleteComment(@PathVariable String commentId) {

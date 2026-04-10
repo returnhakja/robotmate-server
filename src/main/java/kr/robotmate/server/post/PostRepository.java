@@ -25,4 +25,6 @@ public interface PostRepository extends JpaRepository<Post, String>, JpaSpecific
 
     @Query("SELECT COUNT(p) FROM Post p WHERE p.robotModel.id = :robotModelId")
     long countByRobotModelId(@Param("robotModelId") String robotModelId);
+
+    Page<Post> findByUserRobotIdOrderByCreatedAtDesc(String userRobotId, Pageable pageable);
 }

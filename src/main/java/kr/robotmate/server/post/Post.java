@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import kr.robotmate.server.common.BaseEntity;
 import kr.robotmate.server.robot.RobotModel;
 import kr.robotmate.server.user.User;
+import kr.robotmate.server.user.UserRobot;
 import lombok.*;
 
 import java.util.ArrayList;
@@ -43,6 +44,10 @@ public class Post extends BaseEntity {
     @JoinColumn(name = "robot_model_id")
     private RobotModel robotModel;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_robot_id")
+    private UserRobot userRobot;
+
     @ElementCollection
     @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "tag")
@@ -66,6 +71,7 @@ public class Post extends BaseEntity {
     private String condition;
     private String usagePeriod;
     private String tradeMethod;
+    private String tradeLocation;
     private String contactInfo;
 
     @Builder.Default

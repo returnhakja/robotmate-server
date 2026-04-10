@@ -5,6 +5,12 @@ import kr.robotmate.server.auth.RefreshTokenRepository;
 import kr.robotmate.server.common.PageResponse;
 import kr.robotmate.server.common.exception.ConflictException;
 import kr.robotmate.server.common.exception.NotFoundException;
+import kr.robotmate.server.news.NewsRepository;
+import kr.robotmate.server.news.NewsService;
+import kr.robotmate.server.news.NewsType;
+import kr.robotmate.server.news.dto.NewsDetailResponse;
+import kr.robotmate.server.news.dto.NewsRequest;
+import kr.robotmate.server.news.dto.NewsSummaryResponse;
 import kr.robotmate.server.post.Post;
 import kr.robotmate.server.post.PostRepository;
 import kr.robotmate.server.post.PostSpecification;
@@ -46,6 +52,8 @@ public class AdminService {
     private final RobotModelRepository robotModelRepository;
     private final UserRobotRepository userRobotRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final NewsRepository newsRepository;
+    private final NewsService newsService;
 
     // ── 대시보드 통계 ──────────────────────────────────────
 
@@ -55,7 +63,7 @@ public class AdminService {
                 .totalUsers(userRepository.count())
                 .totalPosts(postRepository.count())
                 .totalMarketPosts(postRepository.countByType(PostType.SALE))
-                .totalNews(0)
+                .totalNews(newsRepository.count())
                 .pendingReports(0)
                 .newUsersToday(userRepository.countByCreatedAtAfter(todayStart))
                 .newPostsToday(postRepository.countByCreatedAtAfter(todayStart))
@@ -215,6 +223,36 @@ public class AdminService {
         }
 
         robotModelRepository.delete(model);
+    }
+
+    // ── 뉴스/소식 관리 ─────────────────────────────────────
+
+    public Page<NewsSummaryResponse> getNews(String keyword, NewsType type, String robotModelSlug, Boolean published, int page, int size) {
+        return newsService.getAllNews(keyword, type, robotModelSlug, published, page, size);
+    }
+
+    public NewsDetailResponse getNewsById(String id) {
+        return newsService.getById(id);
+    }
+
+    @Transactional
+    public NewsDetailResponse createNews(NewsRequest request) {
+        return newsService.create(request);
+    }
+
+    @Transactional
+    public NewsDetailResponse updateNews(String id, NewsRequest request) {
+        return newsService.updateById(id, request);
+    }
+
+    @Transactional
+    public void deleteNews(String id) {
+        newsService.deleteById(id);
+    }
+
+    @Transactional
+    public NewsDetailResponse pinNews(String id, boolean isPinned) {
+        return newsService.setPinById(id, isPinned);
     }
 
     // ── 헬퍼 ──────────────────────────────────────────────

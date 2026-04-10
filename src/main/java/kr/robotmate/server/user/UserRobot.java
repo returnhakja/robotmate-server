@@ -30,4 +30,8 @@ public class UserRobot extends BaseEntity {
 
     private String nickname;
     private LocalDate startDate;
+    private String profileImage;
+
+    @Builder.Default
+    private boolean isPublic = true;
 }

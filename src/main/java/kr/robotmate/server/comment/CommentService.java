@@ -118,6 +118,17 @@ public class CommentService {
     }
 
     @Transactional
+    public CommentResponse updateComment(String commentId, CreateCommentRequest request, String userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("존재하지 않는 댓글입니다."));
+        if (!comment.getAuthor().getId().equals(userId)) {
+            throw new ForbiddenException("본인의 댓글만 수정할 수 있습니다.");
+        }
+        comment.setContent(request.getContent());
+        return toResponse(comment);
+    }
+
+    @Transactional
     public void deleteComment(String commentId, String userId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("존재하지 않는 댓글입니다."));

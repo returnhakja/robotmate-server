@@ -12,11 +12,13 @@ import java.util.List;
 public class PostDetailResponse {
     private String id;
     private String type;
+    private String visibility;
     private String title;
     private String content;
     private AuthorInfo author;
     private String robotModelSlug;
     private String robotModelName;
+    private UserRobotInfo userRobot;
     private List<String> tags;
     private List<String> images;
     private int viewCount;
@@ -32,6 +34,7 @@ public class PostDetailResponse {
     private String condition;
     private String usagePeriod;
     private String tradeMethod;
+    private String tradeLocation;
     private String contactInfo;
     private boolean sold;
 
@@ -40,11 +43,13 @@ public class PostDetailResponse {
         return PostDetailResponse.builder()
                 .id(post.getId())
                 .type(post.getType().name())
+                .visibility(post.getVisibility().name())
                 .title(post.getTitle())
                 .content(post.getContent())
                 .author(AuthorInfo.from(post.getAuthor()))
                 .robotModelSlug(post.getRobotModel() != null ? post.getRobotModel().getSlug() : null)
                 .robotModelName(post.getRobotModel() != null ? post.getRobotModel().getName() : null)
+                .userRobot(post.getUserRobot() != null ? UserRobotInfo.from(post.getUserRobot()) : null)
                 .tags(post.getTags())
                 .images(post.getImages())
                 .viewCount(post.getViewCount())
@@ -58,6 +63,7 @@ public class PostDetailResponse {
                 .condition(post.getCondition())
                 .usagePeriod(post.getUsagePeriod())
                 .tradeMethod(post.getTradeMethod())
+                .tradeLocation(post.getTradeLocation())
                 .contactInfo(post.getContactInfo())
                 .sold(post.isSold())
                 .build();

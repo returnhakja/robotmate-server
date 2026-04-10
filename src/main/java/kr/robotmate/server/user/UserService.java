@@ -7,6 +7,7 @@ import kr.robotmate.server.comment.CommentLikeRepository;
 import kr.robotmate.server.comment.CommentRepository;
 import kr.robotmate.server.comment.dto.MyCommentResponse;
 import kr.robotmate.server.common.exception.ConflictException;
+import kr.robotmate.server.common.exception.ForbiddenException;
 import kr.robotmate.server.common.exception.NotFoundException;
 import kr.robotmate.server.post.Bookmark;
 import kr.robotmate.server.post.BookmarkRepository;
@@ -14,6 +15,7 @@ import kr.robotmate.server.post.LikeRepository;
 import kr.robotmate.server.post.Post;
 import kr.robotmate.server.post.PostRepository;
 import kr.robotmate.server.post.dto.PostSummaryResponse;
+import kr.robotmate.server.user.dto.FollowResponse;
 import kr.robotmate.server.user.dto.UpdateUserRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,6 +39,7 @@ public class UserService {
     private final CommentRepository commentRepository;
     private final CommentLikeRepository commentLikeRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final FollowRepository followRepository;
 
     public UserResponse getMe(String userId) {
         User user = findUser(userId);
@@ -52,6 +55,7 @@ public class UserService {
             user.setNickname(request.getNickname());
         }
         if (request.getProfileImage() != null) user.setProfileImage(request.getProfileImage());
+        if (request.getBio() != null) user.setBio(request.getBio());
         return UserResponse.from(user);
     }
 
@@ -95,6 +99,28 @@ public class UserService {
                 : commentLikeRepository.countsByCommentIds(commentIds).stream()
                         .collect(Collectors.toMap(r -> (String) r[0], r -> (Long) r[1]));
         return comments.map(c -> MyCommentResponse.from(c, likeCounts.getOrDefault(c.getId(), 0L)));
+    }
+
+    @Transactional
+    public FollowResponse toggleFollow(String currentUserId, String targetUserId) {
+        if (currentUserId.equals(targetUserId)) {
+            throw new ForbiddenException("자기 자신을 팔로우할 수 없습니다.");
+        }
+        User target = findUser(targetUserId);
+
+        java.util.Optional<Follow> existing = followRepository.findByFollowerIdAndFollowingId(currentUserId, targetUserId);
+        boolean following;
+        if (existing.isPresent()) {
+            followRepository.delete(existing.get());
+            following = false;
+        } else {
+            User follower = findUser(currentUserId);
+            followRepository.save(Follow.builder().follower(follower).following(target).build());
+            following = true;
+        }
+
+        long followerCount = followRepository.countByFollowingId(targetUserId);
+        return new FollowResponse(following, followerCount);
     }
 
     private Page<PostSummaryResponse> toSummaryPage(Page<Post> posts) {

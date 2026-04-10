@@ -12,11 +12,13 @@ import java.util.List;
 public class PostSummaryResponse {
     private String id;
     private String type;
+    private String visibility;
     private String title;
     private String content;  // 앞 150자만
     private AuthorInfo author;
     private String robotModelSlug;
     private String robotModelName;
+    private UserRobotInfo userRobot;
     private List<String> tags;
     private String thumbnail;  // images[0]
     private int viewCount;
@@ -29,11 +31,13 @@ public class PostSummaryResponse {
         return PostSummaryResponse.builder()
                 .id(post.getId())
                 .type(post.getType().name())
+                .visibility(post.getVisibility().name())
                 .title(post.getTitle())
                 .content(truncate(post.getContent(), 150))
                 .author(AuthorInfo.from(post.getAuthor()))
                 .robotModelSlug(post.getRobotModel() != null ? post.getRobotModel().getSlug() : null)
                 .robotModelName(post.getRobotModel() != null ? post.getRobotModel().getName() : null)
+                .userRobot(post.getUserRobot() != null ? UserRobotInfo.from(post.getUserRobot()) : null)
                 .tags(post.getTags())
                 .thumbnail(post.getImages().isEmpty() ? null : post.getImages().get(0))
                 .viewCount(post.getViewCount())

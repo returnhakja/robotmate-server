@@ -8,6 +8,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.robotmate.server.admin.dto.*;
+import kr.robotmate.server.common.PageResponse;
+import kr.robotmate.server.news.NewsType;
+import kr.robotmate.server.news.dto.NewsDetailResponse;
+import kr.robotmate.server.news.dto.NewsRequest;
+import kr.robotmate.server.news.dto.NewsSummaryResponse;
+import kr.robotmate.server.news.dto.PinRequest;
 import kr.robotmate.server.post.PostType;
 import kr.robotmate.server.post.PostVisibility;
 import kr.robotmate.server.post.dto.UpdatePostRequest;
@@ -204,6 +210,108 @@ public class AdminController {
             @Parameter(description = "수정할 기종의 현재 slug") @PathVariable String slug,
             @Valid @RequestBody AdminModelRequest request) {
         return kr.robotmate.server.common.ApiResponse.ok(adminService.updateModel(slug, request));
+    }
+
+    // ── 뉴스/소식 관리 ────────────────────────────────────────
+
+    @Operation(
+            summary = "뉴스 목록 조회 (어드민)",
+            description = "미발행 항목을 포함한 전체 뉴스 목록을 반환합니다. " +
+                    "keyword(제목 검색), type(유형), published(발행 여부) 필터를 조합할 수 있습니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "목록 조회 성공"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음", content = @Content)
+    })
+    @GetMapping("/news")
+    public kr.robotmate.server.common.ApiResponse<PageResponse<NewsSummaryResponse>> getNews(
+            @Parameter(description = "제목 검색어") @RequestParam(required = false) String keyword,
+            @Parameter(description = "유형 필터 (NOTICE | NEWS | ARTICLE)") @RequestParam(required = false) NewsType type,
+            @Parameter(description = "연결 기종 slug 필터") @RequestParam(required = false) String robotModelSlug,
+            @Parameter(description = "발행 상태 필터 (true=발행됨, false=미발행)") @RequestParam(required = false) Boolean published,
+            @Parameter(description = "페이지 번호 (1부터 시작)") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "페이지당 항목 수") @RequestParam(defaultValue = "20") int size) {
+        return kr.robotmate.server.common.ApiResponse.ok(PageResponse.from(adminService.getNews(keyword, type, robotModelSlug, published, page, size)));
+    }
+
+    @Operation(
+            summary = "뉴스 상세 조회 (어드민)",
+            description = "미발행 항목도 포함하여 ID로 뉴스를 조회합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "조회 성공"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 뉴스", content = @Content)
+    })
+    @GetMapping("/news/{id}")
+    public kr.robotmate.server.common.ApiResponse<NewsDetailResponse> getNewsDetail(
+            @Parameter(description = "뉴스 ID") @PathVariable String id) {
+        return kr.robotmate.server.common.ApiResponse.ok(adminService.getNewsById(id));
+    }
+
+    @Operation(
+            summary = "뉴스 생성",
+            description = "새 뉴스/공지/아티클을 작성합니다. " +
+                    "publishedAt을 null로 보내면 즉시 발행, 미래 시간으로 설정하면 예약 발행됩니다. " +
+                    "summary 미입력 시 content에서 앞 150자를 자동 생성합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "생성 성공"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음", content = @Content),
+    })
+    @PostMapping("/news")
+    @ResponseStatus(HttpStatus.CREATED)
+    public kr.robotmate.server.common.ApiResponse<NewsDetailResponse> createNews(
+            @Valid @RequestBody NewsRequest request) {
+        return kr.robotmate.server.common.ApiResponse.ok(adminService.createNews(request));
+    }
+
+    @Operation(
+            summary = "뉴스 수정",
+            description = "기존 뉴스를 수정합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "수정 성공"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 뉴스", content = @Content),
+    })
+    @PutMapping("/news/{id}")
+    public kr.robotmate.server.common.ApiResponse<NewsDetailResponse> updateNews(
+            @Parameter(description = "수정할 뉴스 ID") @PathVariable String id,
+            @Valid @RequestBody NewsRequest request) {
+        return kr.robotmate.server.common.ApiResponse.ok(adminService.updateNews(id, request));
+    }
+
+    @Operation(
+            summary = "뉴스 삭제",
+            description = "뉴스를 삭제합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "삭제 성공"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 뉴스", content = @Content)
+    })
+    @DeleteMapping("/news/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteNews(
+            @Parameter(description = "삭제할 뉴스 ID") @PathVariable String id) {
+        adminService.deleteNews(id);
+    }
+
+    @Operation(
+            summary = "뉴스 상단 고정 토글",
+            description = "뉴스의 상단 고정 여부를 변경합니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "변경 성공"),
+            @ApiResponse(responseCode = "403", description = "ADMIN 권한 없음", content = @Content),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 뉴스", content = @Content)
+    })
+    @PatchMapping("/news/{id}/pin")
+    public kr.robotmate.server.common.ApiResponse<NewsDetailResponse> pinNews(
+            @Parameter(description = "뉴스 ID") @PathVariable String id,
+            @Valid @RequestBody PinRequest request) {
+        return kr.robotmate.server.common.ApiResponse.ok(adminService.pinNews(id, request.getIsPinned()));
     }
 
     @Operation(

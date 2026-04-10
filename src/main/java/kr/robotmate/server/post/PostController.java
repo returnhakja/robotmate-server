@@ -25,19 +25,21 @@ public class PostController {
 
     private final PostService postService;
 
-    @Operation(summary = "게시글 목록 조회", description = "type(SHOW/REVIEW/QUESTION/CONCEPT/SALE), model(slug), tag, sort(latest/popular), page, size 필터 지원")
+    @Operation(summary = "게시글 목록 조회", description = "type(SHOW/REVIEW/QUESTION/CONCEPT/SALE), model(slug), tag, sort(latest/popular), feed(following), page, size 필터 지원")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PostSummaryResponse>>> getPosts(
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String model,
             @RequestParam(required = false) String tag,
             @RequestParam(defaultValue = "latest") String sort,
+            @RequestParam(required = false) String feed,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "12") int size) {
 
         PostType postType = (type == null || type.equalsIgnoreCase("all")) ? null : PostType.valueOf(type.toUpperCase());
+        String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(
-                PageResponse.from(postService.getPosts(postType, model, tag, sort, page, size))));
+                PageResponse.from(postService.getPosts(postType, model, tag, sort, page, size, userId, feed))));
     }
 
     @Operation(summary = "게시글 상세 조회", description = "게시글 ID로 상세 내용을 조회합니다. 로그인 시 좋아요/북마크 여부도 반환됩니다.")
@@ -78,6 +80,13 @@ public class PostController {
     public ResponseEntity<ApiResponse<LikeResponse>> toggleLike(@PathVariable String id) {
         String userId = SecurityUtil.getCurrentUserId();
         return ResponseEntity.ok(ApiResponse.ok(postService.toggleLike(id, userId)));
+    }
+
+    @Operation(summary = "판매완료 토글", description = "판매완료 상태를 토글합니다. 본인 게시글만 가능. sold=true면 [거래완료] 뱃지 표시.")
+    @PatchMapping("/{id}/sold")
+    public ResponseEntity<ApiResponse<PostDetailResponse>> toggleSold(@PathVariable String id) {
+        String userId = SecurityUtil.getCurrentUserId();
+        return ResponseEntity.ok(ApiResponse.ok(postService.markSold(id, userId)));
     }
 
     @Operation(summary = "북마크 토글", description = "북마크를 추가하거나 해제합니다. 응답의 bookmarked 필드로 현재 상태를 확인하세요.")

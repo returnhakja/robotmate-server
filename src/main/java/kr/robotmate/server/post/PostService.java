@@ -6,8 +6,12 @@ import kr.robotmate.server.common.exception.NotFoundException;
 import kr.robotmate.server.post.dto.*;
 import kr.robotmate.server.robot.RobotModel;
 import kr.robotmate.server.robot.RobotModelRepository;
+import kr.robotmate.server.user.Follow;
+import kr.robotmate.server.user.FollowRepository;
 import kr.robotmate.server.user.User;
 import kr.robotmate.server.user.UserRepository;
+import kr.robotmate.server.user.UserRobot;
+import kr.robotmate.server.user.UserRobotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,16 +34,25 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final RobotModelRepository robotModelRepository;
+    private final UserRobotRepository userRobotRepository;
     private final LikeRepository likeRepository;
     private final BookmarkRepository bookmarkRepository;
     private final CommentRepository commentRepository;
+    private final FollowRepository followRepository;
 
     public Page<PostSummaryResponse> getPosts(PostType type, String model, String tag,
-                                               String sort, int page, int size) {
+                                               String sort, int page, int size, String currentUserId,
+                                               String feed) {
         Specification<Post> spec = Specification
                 .where(PostSpecification.hasType(type))
                 .and(PostSpecification.hasModelSlug(model))
-                .and(PostSpecification.hasTag(tag));
+                .and(PostSpecification.hasTag(tag))
+                .and(PostSpecification.visibleTo(currentUserId));
+
+        if ("following".equalsIgnoreCase(feed) && currentUserId != null) {
+            java.util.List<String> followingIds = followRepository.findFollowingIdsByFollowerId(currentUserId);
+            spec = spec.and(PostSpecification.fromFollowing(followingIds));
+        }
 
         Sort sorting = "popular".equals(sort)
                 ? Sort.by(Sort.Direction.DESC, "viewCount")
@@ -61,8 +74,15 @@ public class PostService {
 
     @Transactional
     public PostDetailResponse getPost(String postId, String currentUserId) {
-        postRepository.incrementViewCount(postId);
         Post post = findPost(postId);
+
+        if (post.getVisibility() == PostVisibility.PRIVATE) {
+            if (currentUserId == null || !currentUserId.equals(post.getAuthor().getId())) {
+                throw new ForbiddenException("비공개 게시글입니다.");
+            }
+        }
+
+        postRepository.incrementViewCount(postId);
 
         long likeCount = likeRepository.countByPostId(postId);
         long commentCount = commentRepository.countByPostId(postId);
@@ -83,12 +103,20 @@ public class PostService {
                     .orElseThrow(() -> new NotFoundException("존재하지 않는 기종입니다."));
         }
 
+        UserRobot userRobot = null;
+        if (request.getUserRobotId() != null) {
+            userRobot = userRobotRepository.findByIdAndUserId(request.getUserRobotId(), userId)
+                    .orElseThrow(() -> new NotFoundException("반려로봇을 찾을 수 없습니다."));
+        }
+
         Post post = Post.builder()
                 .type(request.getType())
+                .visibility(request.getVisibility() != null ? request.getVisibility() : PostVisibility.PUBLIC)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .author(author)
                 .robotModel(robotModel)
+                .userRobot(userRobot)
                 .tags(request.getTags())
                 .images(request.getImages())
                 .saleType(request.getSaleType())
@@ -96,6 +124,7 @@ public class PostService {
                 .condition(request.getCondition())
                 .usagePeriod(request.getUsagePeriod())
                 .tradeMethod(request.getTradeMethod())
+                .tradeLocation(request.getTradeLocation())
                 .contactInfo(request.getContactInfo())
                 .build();
 
@@ -110,6 +139,7 @@ public class PostService {
 
         if (request.getTitle() != null) post.setTitle(request.getTitle());
         if (request.getContent() != null) post.setContent(request.getContent());
+        if (request.getVisibility() != null) post.setVisibility(request.getVisibility());
         if (request.getTags() != null) post.setTags(request.getTags());
         if (request.getImages() != null) post.setImages(request.getImages());
         if (request.getSaleType() != null) post.setSaleType(request.getSaleType());
@@ -117,6 +147,7 @@ public class PostService {
         if (request.getCondition() != null) post.setCondition(request.getCondition());
         if (request.getUsagePeriod() != null) post.setUsagePeriod(request.getUsagePeriod());
         if (request.getTradeMethod() != null) post.setTradeMethod(request.getTradeMethod());
+        if (request.getTradeLocation() != null) post.setTradeLocation(request.getTradeLocation());
         if (request.getContactInfo() != null) post.setContactInfo(request.getContactInfo());
         if (request.getSold() != null) post.setSold(request.getSold());
 
@@ -126,6 +157,22 @@ public class PostService {
             post.setRobotModel(robotModel);
         }
 
+        if (request.getUserRobotId() != null) {
+            UserRobot userRobot = userRobotRepository.findByIdAndUserId(request.getUserRobotId(), userId)
+                    .orElseThrow(() -> new NotFoundException("반려로봇을 찾을 수 없습니다."));
+            post.setUserRobot(userRobot);
+        }
+
+        long likeCount = likeRepository.countByPostId(postId);
+        long commentCount = commentRepository.countByPostId(postId);
+        return PostDetailResponse.from(post, likeCount, commentCount, false, false);
+    }
+
+    @Transactional
+    public PostDetailResponse markSold(String postId, String userId) {
+        Post post = findPost(postId);
+        checkOwner(post, userId);
+        post.setSold(!post.isSold());
         long likeCount = likeRepository.countByPostId(postId);
         long commentCount = commentRepository.countByPostId(postId);
         return PostDetailResponse.from(post, likeCount, commentCount, false, false);
